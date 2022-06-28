@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { readStream } = require("./read-stream");
+const {readStream} = require("./read-stream");
 require('dotenv').config();
 
 (() => {
@@ -11,10 +11,12 @@ require('dotenv').config();
 
     // Create input stream from file on provided path if exists
     // Otherwise, listen to input on stdin
-    const inputStream = fs.existsSync(process.argv[2]) ? fs.createReadStream(process.argv[2], {
-        encoding: "utf-8",
-        highWaterMark: 16
-    }) : process.stdin;
+    const inputStream = !fs.existsSync(process.argv[2])
+        ? process.stdin
+        : fs.createReadStream(process.argv[2], {
+            encoding: "utf-8",
+            highWaterMark: 16
+        });
 
     process.on("unhandledRejection", (reason, p) => {
         console.error(reason, p);
