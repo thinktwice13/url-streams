@@ -1,12 +1,13 @@
 const fs = require("fs");
 const { readStream } = require("./read-stream");
+require('dotenv').config();
 
 (() => {
     // Require process.env.IM_SECRET to exist
-    // if (!process.env.IM_SECRET) {
-    //     throw new Error('IM_SECRET is not set');
-    //     process.exit(1)
-    // }
+    if (!process.env.IM_SECRET) {
+        console.error("IM_SECRET environment variable must be set");
+        process.exit(1);
+    }
 
     // Create input stream from file on provided path if exists
     // Otherwise, listen to input on stdin

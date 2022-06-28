@@ -1,4 +1,5 @@
 const https = require("https");
+const {createHmac} = require("crypto");
 
 function reqOpts(url) {
     if (!url) throw new Error("url is required")
@@ -48,7 +49,7 @@ function parseUrl(url, retries) {
         res.on('data', (chunk) => {
             response += chunk;
             if (!title) title = titleFromResponse(response)
-            if (!email) email = emailFromResponse(response)
+            if (!email) email = hash(emailFromResponse(response))
             if (title && email) res.destroy()
         });
     })
@@ -77,6 +78,9 @@ function emailFromResponse(response) {
         }
     }
 }
+
+const hash = s => !s ? undefined : createHmac('sha256', process.env.IM_SECRET).update(s).digest('hex');
+
 
 module.exports = {
     titleFromResponse, emailFromResponse, parseUrl, reqOpts
