@@ -10,14 +10,26 @@ function readStream(inputStream) {
     let brackets = []
     inputStream.on('data', (chunk) => {
         chunk = chunk.toString().replace(/\n/g, "")
-        for (const c of chunk) {
+        console.log({ chunk })
+        const chunkLen = chunk.length
+        for (let i = 0; i < chunkLen; i++) {
+            const c = chunk[i]
             input += c
             if (c === "[") {
+                if (chunk[i - 1] === "\\") {
+                    i++
+                    continue
+                }
+
                 brackets.push(c)
                 continue
             }
 
             if (c === "]") {
+                if (chunk[i - 1] === "\\") {
+                    i++
+                    continue
+                }
                 brackets.pop()
                 if (brackets.length > 0) {
                     continue
@@ -36,11 +48,6 @@ function readStream(inputStream) {
     })
 }
 
-function bracketsFromString(input) {
-    return input.match(/\[(.*?)\]/g)?.map(x => x.replace(/\[|\]/gi, ""))
-}
-
-
 function lastUrlFromString(input) {
     const urls = input.match(/((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/gi)
     if (urls) {
@@ -49,5 +56,5 @@ function lastUrlFromString(input) {
 }
 
 module.exports = {
-    readStream
+    readStream, lastUrlFromString
 }
