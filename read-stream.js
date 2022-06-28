@@ -8,44 +8,50 @@ function readStream(inputStream) {
     // Resets every time outermost square brackets are closed
     let input = ""
     let brackets = []
-    inputStream.on('data', (chunk) => {
-        chunk = chunk.toString().replace(/\n/g, "")
-        console.log({ chunk })
-        const chunkLen = chunk.length
-        for (let i = 0; i < chunkLen; i++) {
-            const c = chunk[i]
-            input += c
-            if (c === "[") {
-                if (chunk[i - 1] === "\\") {
-                    i++
-                    continue
-                }
 
-                brackets.push(c)
+    inputStream.on("data", (chunk) => {
+        input = handleInput(input, chunk, brackets, parsedUrls)
+    })
+}
+
+function handleInput(input, chunk, brackets, parsedUrls) {
+    chunk = chunk.toString().replace(/\n/g, "")
+    const chunkLen = chunk.length
+    for (let i = 0; i < chunkLen; i++) {
+        const c = chunk[i]
+        input += c
+        if (c === "[") {
+            if (chunk[i - 1] === "\\") {
+                i++
                 continue
             }
 
-            if (c === "]") {
-                if (chunk[i - 1] === "\\") {
-                    i++
-                    continue
-                }
-                brackets.pop()
-                if (brackets.length > 0) {
-                    continue
-                }
-                // Outermost brackets closed. Reset input
-                const url = lastUrlFromString(input)
-                input = ""
-                if (!url || parsedUrls.has(url)) {
-                    continue
-                }
-
-                parseUrl(url, 1)
-                parsedUrls.add(url)
-            }
+            brackets.push(c)
+            continue
         }
-    })
+
+        if (c === "]") {
+            if (chunk[i - 1] === "\\") {
+                i++
+                continue
+            }
+            brackets.pop()
+            if (brackets.length > 0) {
+                continue
+            }
+            // Outermost brackets closed. Reset input
+            const url = lastUrlFromString(input)
+            input = ""
+            if (!url || parsedUrls.has(url)) {
+                continue
+            }
+
+            parseUrl(url, 1)
+            parsedUrls.add(url)
+        }
+    }
+
+    return input
 }
 
 function lastUrlFromString(input) {
@@ -56,5 +62,5 @@ function lastUrlFromString(input) {
 }
 
 module.exports = {
-    readStream, lastUrlFromString
+    readStream, lastUrlFromString, handleInput
 }

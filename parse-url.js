@@ -1,12 +1,17 @@
 const https = require("https");
 
 function reqOpts(url) {
-    // Make GET request to url
-    const orig = url.startsWith("https") ? url.substring(8) : url.startsWith("http") ? url.substring(7) : url
-    const [host, path] = orig.split("/")
-    return {
-        hostname: host, // port: url.includes("https://") ? 443 : 80,
-        port: 443, path: path ? "/" + path : "", method: 'GET'
+    if (!url) throw new Error("url is required")
+
+    // Assume https for www urls found
+    if (url.startsWith("www")) {
+        url = "https://" + url
+    }
+    const u = new URL(url)
+    return  {
+        hostname: u.hostname,
+        port: url.startsWith("https") ? 443 : 80,
+        path: u.pathname,
     }
 }
 
@@ -28,7 +33,6 @@ function parseUrl(url, retries) {
     }
 
     const options = reqOpts(url)
-    console.log("reading", url)
     const req = https.get(options, (res) => {
         res.on('error', errCb)
 
@@ -38,7 +42,6 @@ function parseUrl(url, retries) {
             process.stdout.write(JSON.stringify({
                 url, title, email
             }) + "\n");
-            // console.log("Finished", url)
         });
 
         let response = ""
@@ -46,8 +49,6 @@ function parseUrl(url, retries) {
             response += chunk;
             if (!title) title = titleFromResponse(response)
             if (!email) email = emailFromResponse(response)
-            // Todo slice response when title || email found
-            // End early if both title and email found
             if (title && email) res.destroy()
         });
     })
@@ -78,6 +79,5 @@ function emailFromResponse(response) {
 }
 
 module.exports = {
-    titleFromResponse, emailFromResponse, parseUrl,
+    titleFromResponse, emailFromResponse, parseUrl, reqOpts
 }
-
